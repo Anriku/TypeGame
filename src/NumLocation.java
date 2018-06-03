@@ -7,14 +7,9 @@ import java.awt.geom.Rectangle2D;
  * 此类用于获取字体的位置
  */
 public class NumLocation {
-    private double x;
-    private double y;
-    private double baseY;
-    private static String num[] = new String[4];
+    private double baseY = 0;
     private int location;
     private JComponent component;
-    private Graphics2D graphics2D;
-    private Rectangle2D bounds;
 
 
     /**
@@ -27,24 +22,20 @@ public class NumLocation {
         this.location = location;
         this.component = component;
 
-        num[location] = generateNum(location);
-        graphics2D = (Graphics2D) component.getGraphics();
-
-        FontRenderContext context = graphics2D.getFontRenderContext();
-        Font font = new Font("Serif", Font.BOLD, 36);
-        bounds = font.getStringBounds(num[location], context);
-
-        x = (component.getWidth() - bounds.getWidth()) * location / 5;
-        y = 0;
-        baseY = -bounds.getY();
-
+        TypeComponent.nums[location] = generateNum(location);
     }
 
     /**
      * 此方法用于绘制数字
      */
-    public void paintNum() {
-        graphics2D.drawString(num[location], (int) x, (int) baseY);
+    public void paintNum(Graphics2D graphics2D) {
+        FontRenderContext context = graphics2D.getFontRenderContext();
+        Font font = new Font("Serif", Font.BOLD, 15);
+        graphics2D.setFont(font);
+        Rectangle2D bounds = font.getStringBounds(TypeComponent.nums[location], context);
+        double x = (component.getWidth() - bounds.getWidth()) * (location + 1) / 5;
+
+        graphics2D.drawString(TypeComponent.nums[location], (float) x, (float) baseY);
     }
 
 
@@ -67,7 +58,11 @@ public class NumLocation {
             if (j == location) {
                 continue;
             }
-            otherNumHundreds[k] = Integer.valueOf(String.valueOf(num[j].charAt(0)));
+            if (TypeComponent.nums[j] != null) {
+                otherNumHundreds[k] = Integer.valueOf(String.valueOf(TypeComponent.nums[j].charAt(0)));
+            } else {
+                otherNumHundreds[k] = -1;
+            }
             k++;
         }
         //进行百位数字的生成直到生合适的为止
@@ -90,25 +85,26 @@ public class NumLocation {
     /**
      * 此列用于控制字体的下落
      */
-    public void fontDrop(int speed) {
+    public void fontDrop(double speed) {
         baseY += speed;
-        if (baseY >= component.getHeight()){
+        if (baseY >= component.getHeight()) {
             gameOver();
         }
-        component.repaint();
     }
 
-    /**
-     * 这个方法用于重置数字的位置
-     */
-    public void resetNum(){
-        baseY = -bounds.getY();
-    }
 
     /**
      * 如果一个数字落地就游戏结束
      */
-    private void gameOver(){
-        System.exit(0);
+    private void gameOver() {
+        ((TypeComponent)component).onGameOver();
+    }
+
+    /**
+     * 此方法用于重置数字
+     */
+    public void resetNum() {
+        TypeComponent.nums[location] = generateNum(location);
+        baseY = 0;
     }
 }
